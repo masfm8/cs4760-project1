@@ -25,10 +25,10 @@ int main(int argc, char *argv[]) {
                 break;
             case 'h':
                 printf("Usage: %s -n [num_children] -s [simultaneous] -t [iterations]\n", argv[0]);
-                return 0;
+                return EXIT_SUCCESS;
             default:
                 fprintf(stderr, "Unknown option\n");
-                return 1;
+                return EXIT_FAILURE;
         }
     }
 
@@ -41,14 +41,14 @@ int main(int argc, char *argv[]) {
             pid_t pid = fork();
             if (pid == -1) {
                 perror("fork failed");
-                exit(1);
+                exit(EXIT_FAILURE);
             } else if (pid == 0) {
                 // Child process
                 char iterations[10];
                 sprintf(iterations, "%d", t);
                 execl("./user", "user", iterations, NULL);
                 perror("execl failed");
-                exit(1);
+                exit(EXIT_FAILURE);
             } else if (pid > 0) {
                 // Parent process
                 child_pids[num_children++] = pid;
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
         pid_t finished_pid = wait(&status);
         if (finished_pid == -1) {
             perror("wait failed");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         // Remove the finished child from the list
@@ -75,5 +75,5 @@ int main(int argc, char *argv[]) {
     }
 
     printf("All child processes have finished.\n");
-    return 0;
+    return EXIT_SUCCESS;
 }
