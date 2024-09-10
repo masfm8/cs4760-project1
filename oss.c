@@ -1,67 +1,77 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>    // For fork(), exec(), and getopt()
-#include <sys/wait.h>  // For wait()
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+
+#define MAX_CHILDREN 10  // Maximum number of child processes at any given time
 
 int main(int argc, char *argv[]) {
-    int n = 5;  // Default number of children to create
-    int s = 3;  // Default number of simultaneous children allowed
-    int t = 7;  // Default number of iterations for each user process
+    int n = 5;  // Total number of children to create
+    int s = 3;  // Maximum number of simultaneous children
+    int t = 7;  // Iterations for each child
     int option;
 
-    // Parse command-line arguments using getopt()
     while ((option = getopt(argc, argv, "n:s:t:h")) != -1) {
         switch (option) {
-            case 'n':  // Number of processes
-                n = atoi(optarg);  // Convert string to integer
+            case 'n':
+                n = atoi(optarg);
                 break;
-            case 's':  // Simultaneous processes
+            case 's':
                 s = atoi(optarg);
                 break;
-            case 't':  // Iterations per user
+            case 't':
                 t = atoi(optarg);
                 break;
-            case 'h':  // Help message
-                printf("Usage: oss -n [num_children] -s [simultaneous] -t [iterations]\n");
+            case 'h':
+                printf("Usage: %s -n [num_children] -s [simultaneous] -t [iterations]\n", argv[0]);
                 return 0;
             default:
-                printf("Unknown option\n");
+                fprintf(stderr, "Unknown option\n");
                 return 1;
         }
     }
 
-    // Create child processes
-    int running_children = 0;  // Track how many children are currently running
-    for (int i = 0; i < n; i++) {
-        if (running_children >= s) {
-            // If we have max simultaneous children, wait for one to finish
-            wait(NULL);
-            running_children--;  // A child has finished, so decrement running count
+    pid_t child_pids[MAX_CHILDREN] = {0};
+    int num_children = 0;
+    int total_launched = 0;
+
+    while (total_launched < n || num_children > 0) {
+        while (num_children < s && total_launched < n) {
+            pid_t pid = fork();
+            if (pid == -1) {
+                perror("fork failed");
+                exit(1);
+            } else if (pid == 0) {
+                // Child process
+                char iterations[10];
+                sprintf(iterations, "%d", t);
+                execl("./user", "user", iterations, NULL);
+                perror("execl failed");
+                exit(1);
+            } else if (pid > 0) {
+                // Parent process
+                child_pids[num_children++] = pid;
+                total_launched++;
+            }
         }
 
-        pid_t pid = fork();
-        if (pid == -1) {
-            perror("fork failed");
+        // Wait for any child to finish
+        int status;
+        pid_t finished_pid = wait(&status);
+        if (finished_pid == -1) {
+            perror("wait failed");
             exit(1);
         }
 
-        if (pid == 0) {
-            // Child process: Run the 'user' program with the argument t (number of iterations)
-            char iterations[10];
-            sprintf(iterations, "%d", t);  // Convert t to a string for exec
-            execl("./user", "user", iterations, NULL);  // Run './user t'
-            perror("execl failed");  // If exec fails, print an error
-            exit(1);  // Exit child process
-        } else {
-            // Parent process: Keep track of running children
-            running_children++;
+        // Remove the finished child from the list
+        for (int i = 0; i < num_children; i++) {
+            if (child_pids[i] == finished_pid) {
+                child_pids[i] = child_pids[num_children - 1];  // Replace finished child with the last in the list
+                num_children--;  // Decrease the count of running children
+                break;
+            }
         }
-    }
-
-    // Wait for all remaining children to finish
-    while (running_children > 0) {
-        wait(NULL);
-        running_children--;
     }
 
     printf("All child processes have finished.\n");
