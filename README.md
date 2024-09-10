@@ -22,4 +22,4 @@ A step-by-step series of examples that tell you how to get a development environ
 
 1. Clone the repository to your local machine:
    ```bash
-   git clone 
+   git clone https://github.com/masfm8/cs4760-project1
