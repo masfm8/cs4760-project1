@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     char *endptr;
     long iterations = strtol(argv[1], &endptr, 10);
 
-    // Check for empty string and characters left after number
+    // Check for error like  empty string and characters left after number
     if (endptr == argv[1]) {
         fprintf(stderr, "Error: No digits were found\n");
         return EXIT_FAILURE;
@@ -39,4 +39,3 @@ int main(int argc, char *argv[]) {
 
     return EXIT_SUCCESS;
 }
-
