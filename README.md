@@ -23,3 +23,25 @@ A step-by-step series of examples that tell you how to get a development environ
 1. Clone the repository to your local machine:
    ```bash
    git clone https://github.com/masfm8/cs4760-project1
+
+
+   ### Running the Tests
+
+   The functionality of the oss and user programs has been tested under various configurations:
+
+Testing the user program directly:
+./user 5
+
+Testing the oss program with different parameters:
+
+./oss -n 5 -s 3 -t 7
+
+This command configures the oss program to launch 5 user processes, allowing no more than 3 to run simultaneously, each performing 7 iterations.
+
+./oss -n 3 -s 3 -t 5
+
+This setup tests the oss program with 3 user processes, each doing 5 iterations, with up to 3 processes running simultaneously.
+
+### Known Issues
+Currently, there are issues with the Makefile which may affect the compilation process. Efforts are ongoing to resolve these issues to ensure smoother builds and deployments.
+   
