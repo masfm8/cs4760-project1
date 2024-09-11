@@ -4,13 +4,15 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 
-#define MAX_CHILDREN 10  // Maximum number of child processes at any given time
+#define MAX_CHILDREN 10  // Maximum number of child processes
 
 int main(int argc, char *argv[]) {
     int n = 5;  // Total number of children to create
     int s = 3;  // Maximum number of simultaneous children
     int t = 7;  // Iterations for each child
     int option;
+
+    // Parse command-line arguments
 
     while ((option = getopt(argc, argv, "n:s:t:h")) != -1) {
         switch (option) {
@@ -35,6 +37,7 @@ int main(int argc, char *argv[]) {
     pid_t child_pids[MAX_CHILDREN] = {0};
     int num_children = 0;
     int total_launched = 0;
+// outer and inner loop to manage the creation and lifecycle of child
 
     while (total_launched < n || num_children > 0) {
         while (num_children < s && total_launched < n) {
